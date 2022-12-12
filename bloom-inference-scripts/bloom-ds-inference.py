@@ -56,6 +56,7 @@ world_size = int(os.getenv("WORLD_SIZE", "1"))
 deepspeed.init_distributed("nccl")
 rank = dist.get_rank()
 
+USE_CHECKPOINT = False
 
 def print_rank0(*msg):
     if rank != 0:
@@ -132,9 +133,13 @@ if args.benchmark:
     gc.collect()
     deepspeed.runtime.utils.see_memory_usage("pre-from-pretrained", force=True)
 
-# Construct model with fake meta tensors, later will be replaced during ds-inference ckpt load
-with deepspeed.OnDevice(dtype=dtype, device="meta"):
-    model = AutoModelForCausalLM.from_config(config, torch_dtype=torch.bfloat16)
+if USE_CHECKPOINT:
+    # Construct model with fake meta tensors, later will be replaced during ds-inference ckpt load
+    with deepspeed.OnDevice(dtype=dtype, device="meta"):
+        model = AutoModelForCausalLM.from_config(config, torch_dtype=torch.bfloat16)
+else:
+    model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype="auto")
+
 
 if args.benchmark:
     deepspeed.runtime.utils.see_memory_usage("post-from-pretrained", force=True)
@@ -169,15 +174,21 @@ else:
     kwargs = dict(injection_policy={BloomBlock: ("self_attention.dense", "mlp.dense_4h_to_h")})
 
 repo_root = get_repo_root(model_name)
-if tp_presharded_mode:
-    # tp presharded repos come with their own checkpoints config file
-    checkpoints_json = os.path.join(repo_root, "ds_inference_config.json")
+if USE_CHECKPOINT:
+    if tp_presharded_mode:
+        # tp presharded repos come with their own checkpoints config file
+        checkpoints_json = os.path.join(repo_root, "ds_inference_config.json")
+    else:
+        # for normal bloom repo we need to write the checkpoints config file
+        write_checkpoints_json()
+        dist.barrier()
 else:
-    # for normal bloom repo we need to write the checkpoints config file
-    write_checkpoints_json()
-    dist.barrier()
+    checkpoints_json=None
 
-# checkpoints_json=None
+import time
+print(f"rank {rank} arrive here")
+time.sleep(1000)
+
 model = deepspeed.init_inference(
     model,
     mp_size=world_size,

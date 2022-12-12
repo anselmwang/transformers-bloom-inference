@@ -57,7 +57,8 @@ if infer_dtype == "int8":
     dtype = torch.int8
 
 kwargs = dict(
-    device_map="balanced_low_0",
+    # device_map="balanced_low_0",
+    device_map="auto",
 )
 
 if infer_dtype == "int8":
