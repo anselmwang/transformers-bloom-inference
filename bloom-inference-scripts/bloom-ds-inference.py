@@ -56,7 +56,8 @@ world_size = int(os.getenv("WORLD_SIZE", "1"))
 deepspeed.init_distributed("nccl")
 rank = dist.get_rank()
 
-USE_CHECKPOINT = False
+# USE_CHECKPOINT = False
+USE_CHECKPOINT = True
 
 def print_rank0(*msg):
     if rank != 0:
@@ -159,7 +160,7 @@ checkpoints_json = "checkpoints.json"
 def write_checkpoints_json():
     checkpoint_files = get_checkpoint_files(model_name)
     if rank == 0:
-        data = {"type": "BLOOM", "checkpoints": checkpoint_files, "version": 1.0}
+        data = {"type": "ds_model", "checkpoints": checkpoint_files, "version": 1.0}
         json.dump(data, open(checkpoints_json, "w"))
 
 
@@ -185,9 +186,6 @@ if USE_CHECKPOINT:
 else:
     checkpoints_json=None
 
-import time
-print(f"rank {rank} arrive here")
-time.sleep(1000)
 
 model = deepspeed.init_inference(
     model,
