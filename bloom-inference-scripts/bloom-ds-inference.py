@@ -45,6 +45,7 @@ parser = ArgumentParser()
 
 parser.add_argument("--name", required=True, type=str, help="model_name")
 parser.add_argument("--dtype", type=str, help="float16 or int8", choices=["int8", "float16"], default="float16")
+parser.add_argument("--use_checkpoints_json", action="store_true")
 parser.add_argument("--local_rank", required=False, type=int, help="used by dist launchers")
 parser.add_argument("--batch_size", default=1, type=int, help="batch size")
 parser.add_argument("--benchmark", action="store_true", help="additionally run benchmark")
@@ -55,9 +56,6 @@ world_size = int(os.getenv("WORLD_SIZE", "1"))
 
 deepspeed.init_distributed("nccl")
 rank = dist.get_rank()
-
-# USE_CHECKPOINT = False
-USE_CHECKPOINT = True
 
 def print_rank0(*msg):
     if rank != 0:
@@ -79,7 +77,8 @@ def get_repo_root(model_name_or_path):
             model_name_or_path,
             local_files_only=is_offline_mode(),
             cache_dir=os.getenv("TRANSFORMERS_CACHE", None),
-            ignore_patterns=["*.safetensors"],
+            # ignore_patterns=["*.safetensors"],
+            ignore_patterns=["*.safetensors", "flax_model*", "tf_model*"],
         )
 
     dist.barrier()
@@ -88,7 +87,8 @@ def get_repo_root(model_name_or_path):
         model_name_or_path,
         local_files_only=is_offline_mode(),
         cache_dir=os.getenv("TRANSFORMERS_CACHE", None),
-        ignore_patterns=["*.safetensors"],
+        # ignore_patterns=["*.safetensors"],
+        ignore_patterns=["*.safetensors", "flax_model*", "tf_model*"],
     )
 
 
@@ -134,7 +134,7 @@ if args.benchmark:
     gc.collect()
     deepspeed.runtime.utils.see_memory_usage("pre-from-pretrained", force=True)
 
-if USE_CHECKPOINT:
+if args.use_checkpoints_json:
     # Construct model with fake meta tensors, later will be replaced during ds-inference ckpt load
     with deepspeed.OnDevice(dtype=dtype, device="meta"):
         model = AutoModelForCausalLM.from_config(config, torch_dtype=torch.bfloat16)
@@ -175,7 +175,7 @@ else:
     kwargs = dict(injection_policy={BloomBlock: ("self_attention.dense", "mlp.dense_4h_to_h")})
 
 repo_root = get_repo_root(model_name)
-if USE_CHECKPOINT:
+if args.use_checkpoints_json:
     if tp_presharded_mode:
         # tp presharded repos come with their own checkpoints config file
         checkpoints_json = os.path.join(repo_root, "ds_inference_config.json")

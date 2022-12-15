@@ -40,6 +40,7 @@
                 "4",
                 "bloom-inference-scripts/bloom-ds-inference.py",
                 "--name",
+                // "facebook/opt-30b"
                 "facebook/opt-2.7b"
                 // "microsoft/bloom-deepspeed-inference-int8",
                 // "--dtype", "int8"
