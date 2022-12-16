@@ -5,7 +5,7 @@ import deepspeed
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer, pipeline
 
-model_name = "facebook/opt-2.7b"
+model_name = "facebook/opt-125m"
 
 local_rank = int(os.getenv("LOCAL_RANK", "0"))
 world_size = int(os.getenv("WORLD_SIZE", "1"))

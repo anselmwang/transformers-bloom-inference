@@ -139,7 +139,7 @@ if args.use_checkpoints_json:
     with deepspeed.OnDevice(dtype=dtype, device="meta"):
         model = AutoModelForCausalLM.from_config(config, torch_dtype=torch.bfloat16)
 else:
-    model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype="auto")
+    model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=dtype, low_cpu_mem_usage=True)
 
 
 if args.benchmark:

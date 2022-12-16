@@ -22,7 +22,9 @@
             "justMyCode": false,
             "args": [
                 "--name",
-                "facebook/opt-66b",
+                "facebook/opt-125m",
+                // "facebook/opt-2.7b",
+                // "facebook/opt-66b",
                 "--batch_size",
                 "1",
                 "--benchmark"
@@ -37,11 +39,12 @@
             "justMyCode": false,
             "args": [
                 "--num_gpus",
-                "4",
+                "1",
                 "bloom-inference-scripts/bloom-ds-inference.py",
                 "--name",
-                // "facebook/opt-30b"
-                "facebook/opt-2.7b"
+                // "facebook/opt-125m",
+                "facebook/opt-2.7b",
+                // "facebook/opt-30b",
                 // "microsoft/bloom-deepspeed-inference-int8",
                 // "--dtype", "int8"
             ],
