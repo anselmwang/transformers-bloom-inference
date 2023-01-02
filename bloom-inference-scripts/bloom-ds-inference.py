@@ -18,6 +18,7 @@
 import gc
 import io
 import json
+import logging
 import math
 import os
 import time
@@ -57,10 +58,13 @@ world_size = int(os.getenv("WORLD_SIZE", "1"))
 deepspeed.init_distributed("nccl")
 rank = dist.get_rank()
 
-def print_rank0(*msg):
+logging.basicConfig(format="%(asctime)s - %(levelname)s - %(name)s -   %(message)s", level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+def print_rank0(msg):
     if rank != 0:
         return
-    print(*msg)
+    logger.info(msg)
 
 
 ### Model loading and instantiating on GPUs
@@ -291,13 +295,14 @@ if args.benchmark:
         generated = generate()
         total_new_tokens_generated += sum(new_tokens for _, _, new_tokens in generated)
     torch.cuda.synchronize()
-    througput = (time.time() - t0) / (total_new_tokens_generated)
+    t_benchmark_generate_span = (time.time() - t0)
+    througput = t_benchmark_generate_span / (total_new_tokens_generated)
     print_rank0(
         f"""
 *** Performance stats:
 Throughput per token including tokenize: {througput*1000:.2f} msecs
 Start to ready to generate: {t_ready - t_start:.3f} secs
-Tokenize and generate {total_new_tokens_generated} (bs={args.batch_size}) tokens: {t_generate_span:.3f} secs
-Start to finish: {t_ready - t_start + t_generate_span:.3f} secs
+Tokenize and generate {total_new_tokens_generated} (bs={args.batch_size}) tokens: {t_benchmark_generate_span:.3f} secs
+Start to finish: {t_ready - t_start + t_benchmark_generate_span:.3f} secs
 """
     )
