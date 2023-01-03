@@ -12,6 +12,7 @@ from transformers import AutoConfig, AutoModelForCausalLM, AutoTokenizer
 
 def get_args():
     parser = argparse.ArgumentParser()
+    parser.add_argument("--single_gpu", action="store_true")
     parser.add_argument("--local_rank", required=False, type=int, help="used by dist launchers")
     parser.add_argument("--name", type=str, help="Name path", required=True)
     parser.add_argument("--batch_size", default=1, type=int, help="batch size")
@@ -70,9 +71,14 @@ if infer_dtype == "int8":
 else:
     kwargs["torch_dtype"] = dtype
 
+if args.single_gpu:
+    model = AutoModelForCausalLM.from_pretrained(model_name, torch_dtype=dtype, low_cpu_mem_usage=True)
+    model.cuda()
+else:
+    model = AutoModelForCausalLM.from_pretrained(model_name, **kwargs)
 
-model = AutoModelForCausalLM.from_pretrained(model_name, **kwargs)
-
+hf_device_map = getattr(model, "hf_device_map", None)
+print_rank0(f"hf_device_map: {hf_device_map}")
 
 if args.benchmark:
     t_ready = time.time()

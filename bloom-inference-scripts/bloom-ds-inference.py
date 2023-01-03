@@ -303,6 +303,5 @@ if args.benchmark:
 Throughput per token including tokenize: {througput*1000:.2f} msecs
 Start to ready to generate: {t_ready - t_start:.3f} secs
 Tokenize and generate {total_new_tokens_generated} (bs={args.batch_size}) tokens: {t_benchmark_generate_span:.3f} secs
-Start to finish: {t_ready - t_start + t_benchmark_generate_span:.3f} secs
 """
     )
