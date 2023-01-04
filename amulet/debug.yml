@@ -1,0 +1,79 @@
+# just run `amlt debug -i debug.yml`. Amulet will open an interactive bash which you can run any commands.
+# this is very useful for debugging
+# Please refer to this document for more debugging tips https://amulet-docs.azurewebsites.net/main/advanced/2_testing.html
+description: debug
+
+target:
+  service: amlk8s
+  # run "amlt target list amlk8s" to list the names of available AMLK8s targets
+  name: itphyperdgx2cl1
+  vc: hai3
+
+# target:
+#   service: amlk8s
+#   # run "amlt target list amlk8s" to list the names of available AMLK8s targets
+#   name: itplabrr1cl1
+#   vc: resrchvc
+
+# target:
+#   service: amlk8s
+#   # run "amlt target list amlk8s" to list the names of available AMLK8s targets
+#   name: itpeastusv100cl2
+#   vc: resrchvc
+
+environment:
+  image: pytorch/pytorch:1.5-cuda10.1-cudnn7-runtime # pytorch/pytorch:1.4-cuda10.1-cudnn7-devel # pytorch/pytorch:1.0.1-cuda10.0-cudnn7-devel, 1.4-cuda10.1-cudnn7-devel, 1.6.0-cuda10.1-cudnn7-devel
+  setup:
+    - sudo apt-get install -y vim
+    - wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu1804/x86_64/cuda-keyring_1.0-1_all.deb
+    - sudo dpkg -i cuda-keyring_1.0-1_all.deb
+    - sudo apt-get update
+    - sudo apt-get -y install cuda-toolkit-11-8
+    - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/cuda-11.8/lib64
+    - export PATH=$PATH:/usr/local/cuda-11.8/bin
+    - pip install -r src/requirements.txt
+
+    # install vs code
+    - sudo apt-get install -y wget gpg
+    - wget -qO- https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > packages.microsoft.gpg
+    - sudo install -D -o root -g root -m 644 packages.microsoft.gpg /etc/apt/keyrings/packages.microsoft.gpg
+    - sudo sh -c 'echo "deb [arch=amd64,arm64,armhf signed-by=/etc/apt/keyrings/packages.microsoft.gpg] https://packages.microsoft.com/repos/code stable main" > /etc/apt/sources.list.d/vscode.list'
+    - rm -f packages.microsoft.gpg
+    - sudo apt install -y apt-transport-https
+    - sudo apt update
+    - sudo apt install -y code
+
+
+storage:
+  output:
+    storage_account_name: distillerystorage
+    container_name: opt
+  input:
+    storage_account_name: distillerystorage
+    container_name: opt
+  distillery:
+    storage_account_name: distillerystorage
+    container_name: opt
+
+  # turing:
+  #   storage_account_name: turingitp
+  #   container_name: vc-data-blob
+
+code:
+  # local directory of the code. this will be uploaded to the server.
+  # $CONFIG_DIR is expanded to the directory of this config file
+  local_dir: .
+
+data:
+  # remote_dir: wikidata
+
+    
+search:
+  job_template:
+    name: debug
+    sku: G16
+    # sku: G1
+    command:
+      - sleep infinity
+  type: grid
+  max_trials: 50
