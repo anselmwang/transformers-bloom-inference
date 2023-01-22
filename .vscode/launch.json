@@ -40,14 +40,63 @@
             "justMyCode": false,
             "args": [
                 "--num_gpus",
-                "1",
+                "2",
                 "bloom-inference-scripts/bloom-ds-inference.py",
                 "--name",
-                // "facebook/opt-125m",
-                "facebook/opt-2.7b",
+                "facebook/opt-125m",
+                // "facebook/opt-2.7b",
                 // "facebook/opt-30b",
                 // "microsoft/bloom-deepspeed-inference-int8",
                 // "--dtype", "int8"
+                "--batch_size", "1"
+            ],
+        },
+        {
+            "name": "Python: deepspeed.launcher.launch",
+            "type": "python",
+            "request": "launch",
+            "module": "deepspeed.launcher.launch",
+            "justMyCode": false,
+            "args": [
+                "--world_info=eyJsb2NhbGhvc3QiOiBbMF19",
+                "--master_addr=127.0.0.1",
+                "--master_port=29500",
+                "bloom-inference-scripts/bloom-ds-inference.py",
+                "--name",
+                "facebook/opt-125m",
+                "--batch_size",
+                "1"
+            ],
+        },
+        {
+            "name": "Python: viztracer",
+            "type": "python",
+            "request": "launch",
+            "module": "viztracer",
+            "justMyCode": false,
+            "args": [
+                "--tracer_entries",
+                "10000000",
+                "--include_files",
+                "venv/lib/python3.9/site-packages/transformers",
+                "explore_viztracer/fib.py",
+                "--name",
+                "abc"
+            ],
+        },
+        {
+            "name": "Python: viztracer-ds",
+            "type": "python",
+            "request": "launch",
+            "module": "viztracer",
+            "justMyCode": false,
+            "args": [
+                "deepspeed",
+                "-i",
+                "localhost:0",
+                "bloom-inference-scripts/bloom-ds-inference.py",
+                "--name",
+                "face"
             ],
         }
     ]
